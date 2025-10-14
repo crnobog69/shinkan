@@ -1,4 +1,4 @@
-# Shinkan - Discord Manga Notification Bot
+# Shinkan - 新刊
 
 ## Setup
 
