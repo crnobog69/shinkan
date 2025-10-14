@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shinkan - 新刊</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #1e1e2e;
+      color: #cdd6f4;
+      font-family: 'JetBrains Mono', 'Courier New', Consolas, Monaco, monospace;
+      font-size: 13px;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    h1 {
+      color: #a6e3a1;
+      font-size: 24px;
+      text-align: center;
+      font-weight: normal;
+      margin-bottom: 8px;
+    }
+
+    .quote {
+      color: #6c7086;
+      font-size: 12px;
+      text-align: center;
+      font-style: italic;
+      margin-bottom: 16px;
+    }
+
+    .add-form {
+      background: #313244;
+      border: 1px solid #45475a;
+      border-radius: 4px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .add-form h2 {
+      color: #a6e3a1;
+      font-size: 14px;
+      font-weight: normal;
+      margin-bottom: 4px;
+    }
+
+    input[type="text"] {
+      padding: 10px;
+      background: #1e1e2e;
+      border: 1px solid #45475a;
+      border-radius: 4px;
+      color: #cdd6f4;
+      outline: none;
+      font-family: 'JetBrains Mono', 'Courier New', Consolas, Monaco, monospace;
+      font-size: 13px;
+      transition: border-color 0.15s;
+    }
+
+    input[type="text"]:focus {
+      border-color: #a6e3a1;
+    }
+
+    input[type="text"]::placeholder {
+      color: #6c7086;
+    }
+
+    button {
+      padding: 10px 16px;
+      background: #313244;
+      color: #a6e3a1;
+      border: 1px solid #45475a;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', 'Courier New', Consolas, Monaco, monospace;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-weight: normal;
+    }
+
+    button:hover {
+      background: #45475a;
+      border-color: #a6e3a1;
+    }
+
+    .manga-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .manga-item {
+      background: #313244;
+      border: 1px solid #45475a;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .manga-header {
+      padding: 12px;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.15s;
+    }
+
+    .manga-header:hover {
+      background: #383b4d;
+    }
+
+    .manga-title-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .collapse-icon {
+      color: #6c7086;
+      font-size: 10px;
+      transition: transform 0.2s;
+      flex-shrink: 0;
+    }
+
+    .manga-item.collapsed .collapse-icon {
+      transform: rotate(-90deg);
+    }
+
+    .manga-title {
+      color: #a6e3a1;
+      font-size: 14px;
+      flex: 1;
+    }
+
+    .manga-badge {
+      padding: 2px 8px;
+      background: #45475a;
+      color: #89dceb;
+      border-radius: 3px;
+      font-size: 11px;
+    }
+
+    .manga-url {
+      color: #6c7086;
+      font-size: 11px;
+      margin-left: 18px;
+      word-break: break-all;
+    }
+
+    .manga-last {
+      color: #f9e2af;
+      font-size: 11px;
+      margin-left: 18px;
+      margin-top: 4px;
+    }
+
+    .manga-content {
+      padding: 0 12px 12px 12px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .manga-item.collapsed .manga-content {
+      display: none;
+    }
+
+    .manga-content button {
+      flex: 1;
+      font-size: 12px;
+      padding: 8px;
+    }
+
+    .test-btn {
+      color: #89dceb;
+    }
+
+    .realtest-btn {
+      color: #a6e3a1;
+    }
+
+    .check-btn {
+      color: #cba6f7;
+    }
+
+    .edit-btn {
+      color: #f9e2af;
+    }
+
+    .delete-btn {
+      color: #f38ba8;
+    }
+
+    .empty-state {
+      text-align: center;
+      color: #6c7086;
+      padding: 60px 20px;
+      font-size: 13px;
+      background: #313244;
+      border: 1px solid #45475a;
+      border-radius: 4px;
+    }
+
+    .notification {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #a6e3a1;
+      color: #1e1e2e;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+      z-index: 1000;
+    }
+
+    .notification.show {
+      opacity: 1;
+    }
+
+    .footer {
+      text-align: center;
+      color: #6c7086;
+      font-size: 11px;
+      margin-top: 32px;
+      padding: 16px;
+    }
+
+    .footer .heart {
+      color: #f38ba8;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Shinkan - 新刊</h1>
+    <p class="quote">"A cage went in search of a bird."</p>
+    
+    <div class="add-form">
+      <h2>► Add New Manga</h2>
+      <input type="text" id="mangaName" placeholder="Manga Name">
+      <input type="text" id="rssUrl" placeholder="RSS Feed URL or Series Page">
+      <input type="text" id="anilistUrl" placeholder="AniList URL (optional)">
+      <button onclick="addManga()">Add Manga</button>
+      <button onclick="exportList()" style="margin-top: 8px; color: #89dceb;">Export List</button>
+    </div>
+
+    <div class="manga-list" id="mangaList"></div>
+
+    <div class="footer">
+      Made with <span class="heart">♥</span> by crnobog
+    </div>
+  </div>
+
+  <div class="notification" id="notification"></div>
+
+  <script>
+    async function loadMangas() {
+      const res = await fetch('/api/mangas');
+      const mangas = await res.json();
+      const list = document.getElementById('mangaList');
+      
+      if (mangas.length === 0) {
+        list.innerHTML = '<div class="empty-state">No manga added yet. Add one above to get started.</div>';
+        return;
+      }
+      
+      list.innerHTML = mangas.map(m => `
+        <div class="manga-item" id="manga-${m.id}">
+          <div class="manga-header" onclick="toggleManga('${m.id}')">
+            <div class="manga-title-row">
+              <span class="collapse-icon">▼</span>
+              <span class="manga-title">${escapeHtml(m.name)}</span>
+              <span class="manga-badge">RSS</span>
+            </div>
+            <div class="manga-url">${escapeHtml(m.rssUrl)}</div>
+            ${m.anilistUrl ? `<div class="manga-url" style="color: #89dceb;">AniList: ${escapeHtml(m.anilistUrl)}</div>` : ''}
+            ${m.lastChapter ? `<div class="manga-last">Last: ${escapeHtml(m.lastChapter)}</div>` : ''}
+          </div>
+          <div class="manga-content">
+            <button class="test-btn" onclick="event.stopPropagation(); testManga('${m.id}')">Test</button>
+            <button class="realtest-btn" onclick="event.stopPropagation(); realTestManga('${m.id}')">Real Test</button>
+            <button class="check-btn" onclick="event.stopPropagation(); checkManga('${m.id}')">Check</button>
+            <button class="edit-btn" onclick="event.stopPropagation(); editManga('${m.id}', '${escapeHtml(m.name).replace(/'/g, "\\'")}', '${escapeHtml(m.rssUrl).replace(/'/g, "\\'")}')">Edit</button>
+            <button class="delete-btn" onclick="event.stopPropagation(); deleteManga('${m.id}')">Delete</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function toggleManga(id) {
+      const item = document.getElementById(`manga-${id}`);
+      item.classList.toggle('collapsed');
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function showNotification(message) {
+      const notif = document.getElementById('notification');
+      notif.textContent = message;
+      notif.classList.add('show');
+      setTimeout(() => notif.classList.remove('show'), 2000);
+    }
+
+    async function addManga() {
+      const name = document.getElementById('mangaName').value;
+      const rssUrl = document.getElementById('rssUrl').value;
+      const anilistUrl = document.getElementById('anilistUrl').value;
+      if (!name || !rssUrl) {
+        showNotification('Please fill all fields');
+        return;
+      }
+      
+      await fetch('/api/mangas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, rssUrl, anilistUrl })
+      });
+      
+      document.getElementById('mangaName').value = '';
+      document.getElementById('rssUrl').value = '';
+      document.getElementById('anilistUrl').value = '';
+      showNotification('Manga added successfully');
+      loadMangas();
+    }
+
+    async function deleteManga(id) {
+      if (!confirm('Delete this manga?')) return;
+      await fetch(`/api/mangas/${id}`, { method: 'DELETE' });
+      showNotification('Manga deleted');
+      loadMangas();
+    }
+
+    async function editManga(id, currentName, currentUrl) {
+      const name = prompt('Edit Manga Name:', currentName);
+      if (!name) return;
+      
+      const rssUrl = prompt('Edit RSS URL:', currentUrl);
+      if (!rssUrl) return;
+
+      const anilistUrl = prompt('Edit AniList URL (optional):', '');
+
+      await fetch(`/api/mangas/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, rssUrl, anilistUrl })
+      });
+      
+      showNotification('Manga updated');
+      loadMangas();
+    }
+
+    async function testManga(id) {
+      showNotification('Testing... Check Discord!');
+      const res = await fetch(`/api/mangas/${id}/test`, { method: 'POST' });
+      const data = await res.json();
+      if (data.error) {
+        showNotification('Error: ' + data.error);
+      } else {
+        showNotification('Test notification sent!');
+      }
+    }
+
+    async function realTestManga(id) {
+      showNotification('Real Test... Check Discord!');
+      const res = await fetch(`/api/mangas/${id}/realtest`, { method: 'POST' });
+      const data = await res.json();
+      if (data.error) {
+        showNotification('Error: ' + data.error);
+      } else {
+        showNotification('Real test notification sent!');
+      }
+    }
+
+    async function exportList() {
+      window.location.href = '/api/export';
+      showNotification('Exporting manga list...');
+    }
+
+    loadMangas();
+  </script>
+</body>
+</html>
