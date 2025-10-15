@@ -34,7 +34,7 @@ const client = new Client({
 const storage = new Storage(config.dataFile);
 const rssChecker = new RSSChecker(storage, client, config.channelId);
 
-client.once('ready', () => {
+client.once('clientReady', () => {
     console.log(`✅ Logged in as ${client.user.tag}`);
     console.log(`📺 Watching channel: ${config.channelId}`);
 
@@ -56,7 +56,7 @@ client.once('ready', () => {
         console.log('⏰ Scheduled check triggered');
         rssChecker.checkAll();
     });
-    
+
     console.log(`⏰ Scheduled checks: ${config.checkInterval}`);
 });
 
