@@ -4,15 +4,15 @@ A Discord bot that monitors manga RSS feeds and sends notifications when new cha
 
 ## Features
 
-✨ **Core Features:**
-- 🔔 Automatic manga chapter notifications to Discord
-- 🌐 Web-based management interface
-- 📊 Real-time statistics dashboard
-- 🔍 Search and filter manga by category
-- 📥 Import/Export manga lists
-- 🔄 Automatic retry mechanism for failed checks
-- ⚠️ Error tracking and reporting
-- 🎨 Beautiful terminal UI with colored output
+**Core Features:**
+- Automatic manga chapter notifications to Discord
+- Web-based management interface
+- Real-time statistics dashboard
+- Search and filter manga by category
+- Import/Export manga lists
+- Automatic retry mechanism for failed checks
+- Error tracking and reporting
+- Beautiful terminal UI with colored output
 
 ## Setup
 
