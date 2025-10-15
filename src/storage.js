@@ -36,9 +36,62 @@ class Storage {
         manga.lastChecked = null;
         manga.lastChapter = null;
         manga.anilistUrl = manga.anilistUrl || null;
+        manga.category = manga.category || 'Uncategorized';
+        manga.lastError = null;
+        manga.failCount = 0;
+        manga.addedAt = new Date().toISOString();
         data.mangas.push(manga);
         this.write(data);
         return manga;
+    }
+
+    importMangas(mangasToImport) {
+        const data = this.read();
+        let imported = 0;
+        let skipped = 0;
+
+        for (const manga of mangasToImport) {
+            // Check if manga already exists by RSS URL
+            const exists = data.mangas.some(m => m.rssUrl === manga.rssUrl);
+            if (exists) {
+                skipped++;
+                continue;
+            }
+
+            const newManga = {
+                id: Date.now().toString() + imported,
+                name: manga.name,
+                rssUrl: manga.rssUrl,
+                anilistUrl: manga.anilistUrl || null,
+                category: manga.category || 'Uncategorized',
+                lastChecked: null,
+                lastChapter: null,
+                lastError: null,
+                failCount: 0,
+                addedAt: new Date().toISOString()
+            };
+            data.mangas.push(newManga);
+            imported++;
+        }
+
+        this.write(data);
+        return { imported, skipped };
+    }
+
+    getCategories() {
+        const mangas = this.getMangas();
+        const categories = new Set(mangas.map(m => m.category || 'Uncategorized'));
+        return Array.from(categories).sort();
+    }
+
+    searchMangas(query) {
+        const mangas = this.getMangas();
+        const lowerQuery = query.toLowerCase();
+        return mangas.filter(m => 
+            m.name.toLowerCase().includes(lowerQuery) ||
+            m.rssUrl.toLowerCase().includes(lowerQuery) ||
+            (m.lastChapter && m.lastChapter.toLowerCase().includes(lowerQuery))
+        );
     }
 
     deleteManga(id) {

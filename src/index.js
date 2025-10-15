@@ -16,6 +16,17 @@ console.log(`
 ===================================================
 `);
 
+// Validate required configuration
+if (!config.discordToken) {
+    console.error('❌ ERROR: DISCORD_TOKEN is not set in .env file');
+    process.exit(1);
+}
+
+if (!config.channelId) {
+    console.error('❌ ERROR: DISCORD_CHANNEL_ID is not set in .env file');
+    process.exit(1);
+}
+
 const client = new Client({
     intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages]
 });
@@ -23,8 +34,9 @@ const client = new Client({
 const storage = new Storage(config.dataFile);
 const rssChecker = new RSSChecker(storage, client, config.channelId);
 
-client.once('clientReady', () => {
+client.once('ready', () => {
     console.log(`✅ Logged in as ${client.user.tag}`);
+    console.log(`📺 Watching channel: ${config.channelId}`);
 
     // Set bot status
     client.user.setPresence({
@@ -36,15 +48,26 @@ client.once('clientReady', () => {
     });
 
     // Initial check
+    console.log('🔍 Starting initial manga check...');
     rssChecker.checkAll();
 
     // Schedule periodic checks
     cron.schedule(config.checkInterval, () => {
+        console.log('⏰ Scheduled check triggered');
         rssChecker.checkAll();
     });
+    
+    console.log(`⏰ Scheduled checks: ${config.checkInterval}`);
 });
 
-client.login(config.discordToken);
+client.on('error', (error) => {
+    console.error('❌ Discord client error:', error);
+});
+
+client.login(config.discordToken).catch((error) => {
+    console.error('❌ Failed to login to Discord:', error.message);
+    process.exit(1);
+});
 
 // Start web server
 createWebServer(storage, config.webPort, rssChecker);

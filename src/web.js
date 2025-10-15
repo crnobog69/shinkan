@@ -8,45 +8,118 @@ function createWebServer(storage, port, rssChecker) {
     app.use(express.static(path.join(__dirname, '../public')));
 
     app.get('/api/mangas', (req, res) => {
-        res.json(storage.getMangas());
+        try {
+            const { category, search } = req.query;
+            let mangas = storage.getMangas();
+
+            if (search) {
+                mangas = storage.searchMangas(search);
+            } else if (category && category !== 'all') {
+                mangas = mangas.filter(m => (m.category || 'Uncategorized') === category);
+            }
+
+            res.json(mangas);
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    app.get('/api/categories', (req, res) => {
+        try {
+            const categories = storage.getCategories();
+            res.json(categories);
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    app.get('/api/stats', (req, res) => {
+        try {
+            const mangas = storage.getMangas();
+            const checkerStats = rssChecker.getStats();
+            const stats = {
+                totalMangas: mangas.length,
+                mangasWithErrors: mangas.filter(m => m.failCount > 0).length,
+                mangasNeverChecked: mangas.filter(m => !m.lastChecked).length,
+                categories: storage.getCategories().length,
+                ...checkerStats
+            };
+            res.json(stats);
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    app.get('/api/health', (req, res) => {
+        res.json({
+            status: 'ok',
+            timestamp: new Date().toISOString(),
+            uptime: process.uptime()
+        });
     });
 
     app.post('/api/mangas', (req, res) => {
-        let { name, rssUrl, anilistUrl } = req.body;
-        if (!name || !rssUrl) {
-            return res.status(400).json({ error: 'Name and RSS URL required' });
-        }
+        try {
+            let { name, rssUrl, anilistUrl, category } = req.body;
+            if (!name || !rssUrl) {
+                return res.status(400).json({ error: 'Name and RSS URL required' });
+            }
 
-        // Auto-append /rss if not present
-        if (!rssUrl.endsWith('/rss')) {
-            rssUrl = rssUrl.replace(/\/$/, '') + '/rss';
-        }
+            // Auto-append /rss if not present
+            if (!rssUrl.endsWith('/rss')) {
+                rssUrl = rssUrl.replace(/\/$/, '') + '/rss';
+            }
 
-        const manga = storage.addManga({ name, rssUrl, anilistUrl });
-        res.json(manga);
+            const manga = storage.addManga({ name, rssUrl, anilistUrl, category });
+            res.json(manga);
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    app.post('/api/import', (req, res) => {
+        try {
+            const { mangas } = req.body;
+            if (!mangas || !Array.isArray(mangas)) {
+                return res.status(400).json({ error: 'Invalid import data' });
+            }
+
+            const result = storage.importMangas(mangas);
+            res.json(result);
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
     });
 
     app.delete('/api/mangas/:id', (req, res) => {
-        storage.deleteManga(req.params.id);
-        res.json({ success: true });
+        try {
+            storage.deleteManga(req.params.id);
+            res.json({ success: true });
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
     });
 
     app.put('/api/mangas/:id', (req, res) => {
-        let { name, rssUrl, anilistUrl } = req.body;
-        if (!name || !rssUrl) {
-            return res.status(400).json({ error: 'Name and RSS URL required' });
-        }
+        try {
+            let { name, rssUrl, anilistUrl, category } = req.body;
+            if (!name || !rssUrl) {
+                return res.status(400).json({ error: 'Name and RSS URL required' });
+            }
 
-        // Auto-append /rss if not present
-        if (!rssUrl.endsWith('/rss')) {
-            rssUrl = rssUrl.replace(/\/$/, '') + '/rss';
-        }
+            // Auto-append /rss if not present
+            if (!rssUrl.endsWith('/rss')) {
+                rssUrl = rssUrl.replace(/\/$/, '') + '/rss';
+            }
 
-        const manga = storage.updateManga(req.params.id, { name, rssUrl, anilistUrl });
-        if (!manga) {
-            return res.status(404).json({ error: 'Manga not found' });
+            const manga = storage.updateManga(req.params.id, { name, rssUrl, anilistUrl, category });
+            if (!manga) {
+                return res.status(404).json({ error: 'Manga not found' });
+            }
+            res.json(manga);
+        } catch (error) {
+            res.status(500).json({ error: error.message });
         }
-        res.json(manga);
     });
 
     app.post('/api/mangas/:id/test', async (req, res) => {
@@ -146,26 +219,31 @@ function createWebServer(storage, port, rssChecker) {
     });
 
     app.get('/api/export', (req, res) => {
-        const mangas = storage.getMangas();
-        const exportData = {
-            exported: new Date().toISOString(),
-            count: mangas.length,
-            mangas: mangas.map(m => ({
-                name: m.name,
-                rssUrl: m.rssUrl,
-                anilistUrl: m.anilistUrl,
-                lastChapter: m.lastChapter
-            }))
-        };
+        try {
+            const mangas = storage.getMangas();
+            const exportData = {
+                exported: new Date().toISOString(),
+                version: '1.0',
+                count: mangas.length,
+                mangas: mangas.map(m => ({
+                    name: m.name,
+                    rssUrl: m.rssUrl,
+                    anilistUrl: m.anilistUrl,
+                    category: m.category,
+                    lastChapter: m.lastChapter
+                }))
+            };
 
-        res.setHeader('Content-Disposition', 'attachment; filename=shinkan-export.json');
-        res.setHeader('Content-Type', 'application/json');
-        res.json(exportData);
+            res.setHeader('Content-Disposition', 'attachment; filename=shinkan-export.json');
+            res.setHeader('Content-Type', 'application/json');
+            res.json(exportData);
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
     });
 
     app.listen(port, () => {
-        console.log(`Web UI running at http://192.168.1.8:${port}`);
-        console.log(`Web UI running at http://localhost:${port}`);
+        console.log(`🌐 Web UI running at http://localhost:${port}`);
     });
 
     return app;
