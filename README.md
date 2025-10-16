@@ -84,7 +84,7 @@ pm2 logs shinkan        # View logs
 pm2 restart shinkan     # Restart bot
 pm2 stop shinkan        # Stop bot
 pm2 delete shinkan      # Remove from PM2
-pm2 monit              # Monitor in real-time
+pm2 monit               # Monitor in real-time
 ```
 
 ### Make PM2 Start on System Boot
