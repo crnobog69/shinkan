@@ -12,7 +12,6 @@ A Discord bot that monitors manga RSS feeds and sends notifications when new cha
 - Import/Export manga lists
 - Automatic retry mechanism for failed checks
 - Error tracking and reporting
-- Beautiful terminal UI with colored output
 
 ## Setup
 
