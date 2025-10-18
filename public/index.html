@@ -426,6 +426,10 @@
           <span class="stat-label">Last Check:</span>
           <span class="stat-value" id="statLastCheck">-</span>
         </div>
+        <div class="stat-item">
+          <span class="stat-label">Uptime:</span>
+          <span class="stat-value" id="statUptime">-</span>
+        </div>
       </div>
 
       <div class="filter-bar">
@@ -546,6 +550,34 @@
           .join("");
       }
 
+      let cachedUptimeStart = null;
+      let uptimeInterval = null;
+
+      function formatUptime(ms) {
+        const seconds = Math.floor(ms / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const hours = Math.floor(minutes / 60);
+        const days = Math.floor(hours / 24);
+
+        if (days > 0) {
+          return `${days}d ${hours % 24}h ${minutes % 60}m`;
+        } else if (hours > 0) {
+          return `${hours}h ${minutes % 60}m ${seconds % 60}s`;
+        } else if (minutes > 0) {
+          return `${minutes}m ${seconds % 60}s`;
+        } else {
+          return `${seconds}s`;
+        }
+      }
+
+      function updateUptimeDisplay() {
+        if (cachedUptimeStart !== null) {
+          const currentUptime = Date.now() - cachedUptimeStart;
+          document.getElementById("statUptime").textContent =
+            formatUptime(currentUptime);
+        }
+      }
+
       async function loadStats() {
         try {
           const res = await fetch("/api/stats");
@@ -561,6 +593,12 @@
             const date = new Date(stats.lastCheckTime);
             document.getElementById("statLastCheck").textContent =
               date.toLocaleTimeString('sr-RS', { hour12: false });
+          }
+
+          if (stats.uptime !== undefined) {
+            // Calculate when the bot started based on current uptime
+            cachedUptimeStart = Date.now() - stats.uptime;
+            updateUptimeDisplay();
           }
         } catch (error) {
           console.error("Failed to load stats:", error);
@@ -774,6 +812,9 @@
 
       // Refresh stats every 30 seconds
       setInterval(loadStats, 30000);
+      
+      // Update uptime display every second
+      setInterval(updateUptimeDisplay, 1000);
     </script>
   </body>
 </html>

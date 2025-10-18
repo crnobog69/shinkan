@@ -34,6 +34,9 @@ const client = new Client({
 const storage = new Storage(config.dataFile);
 const rssChecker = new RSSChecker(storage, client, config.channelId);
 
+// Track bot start time
+const botStartTime = Date.now();
+
 client.once('clientReady', () => {
     console.log(`✅ Logged in as ${client.user.tag}`);
     console.log(`📺 Watching channel: ${config.channelId}`);
@@ -70,4 +73,4 @@ client.login(config.discordToken).catch((error) => {
 });
 
 // Start web server
-createWebServer(storage, config.webPort, rssChecker);
+createWebServer(storage, config.webPort, rssChecker, () => botStartTime);

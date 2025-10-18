@@ -1,7 +1,7 @@
 const express = require('express');
 const path = require('path');
 
-function createWebServer(storage, port, rssChecker) {
+function createWebServer(storage, port, rssChecker, getStartTime) {
     const app = express();
 
     app.use(express.json());
@@ -37,11 +37,13 @@ function createWebServer(storage, port, rssChecker) {
         try {
             const mangas = storage.getMangas();
             const checkerStats = rssChecker.getStats();
+            const uptimeMs = Date.now() - getStartTime();
             const stats = {
                 totalMangas: mangas.length,
                 mangasWithErrors: mangas.filter(m => m.failCount > 0).length,
                 mangasNeverChecked: mangas.filter(m => !m.lastChecked).length,
                 categories: storage.getCategories().length,
+                uptime: uptimeMs,
                 ...checkerStats
             };
             res.json(stats);
